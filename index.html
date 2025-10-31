@@ -1,207 +1,180 @@
 <!DOCTYPE html>
 <html lang="fi">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="UTF-8">
 <title>Villen Piano</title>
 <style>
-  :root{
-    --blue1:#001f3f;
-    --blue2:#003366;
-    --blue3:#004080;
-    --lightblue:#00ffff;
+  body {
+    margin: 0;
+    overflow: hidden;
+    font-family: sans-serif;
+    background: #001f3f;
   }
-  body{
-    margin:0;
-    height:100vh;
-    font-family:'Segoe UI',sans-serif;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:flex-start;
-    background:linear-gradient(270deg,var(--blue1),var(--blue2),var(--blue3));
-    background-size:600% 600%;
-    animation:bgshift 18s ease infinite;
-    overflow:hidden;
+  #title {
+    position: absolute;
+    top: 10px;
+    width: 100%;
+    text-align: center;
+    font-size: 5em;
+    color: #0ff;
+    text-shadow: 0 0 20px #0ff, 0 0 40px #0ff, 0 0 60px #0ff;
+    z-index: 2;
   }
-  @keyframes bgshift {
-    0%{background-position:0% 50%}
-    50%{background-position:100% 50%}
-    100%{background-position:0% 50%}
+  #piano {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    z-index: 2;
   }
-  h1{
-    color:var(--lightblue);
-    text-shadow:0 0 20px rgba(0,255,255,0.4);
-    font-size:3rem;
-    margin-top:20px;
-    margin-bottom:30px;
+  .key {
+    width: 70px;
+    height: 300px;
+    border: 1px solid #000;
+    position: relative;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    font-size: 16px;
+    color: #000;
+    user-select: none;
+    margin: 2px;
   }
-  .piano{
-    position:relative;
-    display:flex;
-    justify-content:center;
-    align-items:flex-end;
-    padding:20px;
-    user-select:none;
+  .white { background: #fff; z-index: 1; }
+  .black { 
+    background: #000; 
+    width: 45px; 
+    height: 200px; 
+    margin-left: -22px; 
+    margin-right: -22px;
+    color: #0ff;
+    z-index: 2;
   }
-  .white{
-    width:60px;
-    height:240px;
-    margin:1px;
-    background:linear-gradient(to bottom,#fff,#e0e0e0);
-    border:1px solid #999;
-    border-radius:0 0 6px 6px;
-    display:flex;
-    flex-direction:column;
-    justify-content:flex-end;
-    align-items:center;
-    font-weight:bold;
-    color:#222;
-    box-shadow:0 4px 10px rgba(0,0,0,0.4);
-    transition:all 0.08s ease;
-  }
-  .white.active{
-    background:linear-gradient(to bottom,#aef,#68f);
-    transform:translateY(3px);
-    box-shadow:0 0 18px rgba(0,255,255,0.6);
-  }
-  .black{
-    position:absolute;
-    width:40px;
-    height:150px;
-    background:linear-gradient(to bottom,#222,#000);
-    border-radius:0 0 6px 6px;
-    z-index:2;
-    margin-left:-20px;
-    color:#fff;
-    display:flex;
-    justify-content:center;
-    align-items:flex-end;
-    padding-bottom:6px;
-    font-weight:bold;
-    transition:all 0.08s ease;
-  }
-  .black.active{
-    background:linear-gradient(to bottom,#00f,#004);
-    box-shadow:0 0 16px rgba(0,255,255,0.8);
-    transform:translateY(3px);
-  }
-  footer{
-    margin-top:40px;
-    color:rgba(255,255,255,0.8);
-    font-size:14px;
-  }
+  .active { transform: scaleY(0.9); box-shadow: 0 0 15px #0ff; }
+  canvas { position: absolute; top:0; left:0; width:100%; height:100%; z-index:0; }
 </style>
 </head>
 <body>
-<h1>Villen Piano</h1>
-
-<div class="piano" id="piano"></div>
-
-<footer>Soita hiirellä tai näppäimistöllä (Z-M ja Q-P)</footer>
+<div id="title">Villen Piano</div>
+<canvas id="bg"></canvas>
+<div id="piano"></div>
 
 <script>
 const keys = [
-  {name:'C3',freq:130.81,color:'white',key:'z'},
-  {name:'C#3',freq:138.59,color:'black',key:'s'},
-  {name:'D3',freq:146.83,color:'white',key:'x'},
-  {name:'D#3',freq:155.56,color:'black',key:'d'},
-  {name:'E3',freq:164.81,color:'white',key:'c'},
-  {name:'F3',freq:174.61,color:'white',key:'v'},
-  {name:'F#3',freq:185.00,color:'black',key:'g'},
-  {name:'G3',freq:196.00,color:'white',key:'b'},
-  {name:'G#3',freq:207.65,color:'black',key:'h'},
-  {name:'A3',freq:220.00,color:'white',key:'n'},
-  {name:'A#3',freq:233.08,color:'black',key:'j'},
-  {name:'B3',freq:246.94,color:'white',key:'m'},
-
-  {name:'C4',freq:261.63,color:'white',key:'q'},
-  {name:'C#4',freq:277.18,color:'black',key:'2'},
-  {name:'D4',freq:293.66,color:'white',key:'w'},
-  {name:'D#4',freq:311.13,color:'black',key:'3'},
-  {name:'E4',freq:329.63,color:'white',key:'e'},
-  {name:'F4',freq:349.23,color:'white',key:'r'},
-  {name:'F#4',freq:369.99,color:'black',key:'5'},
-  {name:'G4',freq:392.00,color:'white',key:'t'},
-  {name:'G#4',freq:415.30,color:'black',key:'6'},
-  {name:'A4',freq:440.00,color:'white',key:'y'},
-  {name:'A#4',freq:466.16,color:'black',key:'7'},
-  {name:'B4',freq:493.88,color:'white',key:'u'},
-  {name:'C5',freq:523.25,color:'white',key:'i'},
-  {name:'C#5',freq:554.37,color:'black',key:'9'},
-  {name:'D5',freq:587.33,color:'white',key:'o'},
-  {name:'D#5',freq:622.25,color:'black',key:'0'},
-  {name:'E5',freq:659.25,color:'white',key:'p'}
+  {note:"C3", freq:130.81},{note:"C#3", freq:138.59},{note:"D3", freq:146.83},
+  {note:"D#3", freq:155.56},{note:"E3", freq:164.81},{note:"F3", freq:174.61},
+  {note:"F#3", freq:185.00},{note:"G3", freq:196.00},{note:"G#3", freq:207.65},
+  {note:"A3", freq:220.00},{note:"A#3", freq:233.08},{note:"B3", freq:246.94},
+  {note:"C4", freq:261.63},{note:"C#4", freq:277.18},{note:"D4", freq:293.66},
+  {note:"D#4", freq:311.13},{note:"E4", freq:329.63},{note:"F4", freq:349.23},
+  {note:"F#4", freq:369.99},{note:"G4", freq:392.00},{note:"G#4", freq:415.30},
+  {note:"A4", freq:440.00},{note:"A#4", freq:466.16},{note:"B4", freq:493.88},
+  {note:"C5", freq:523.25},{note:"C#5", freq:554.37},{note:"D5", freq:587.33},
+  {note:"D#5", freq:622.25},{note:"E5", freq:659.25},{note:"F5", freq:698.46}
 ];
 
 const piano = document.getElementById('piano');
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+const activeKeys = new Set();
+let sustain = false;
 
-keys.forEach((k,i)=>{
-  const el=document.createElement('div');
-  el.classList.add(k.color);
-  el.dataset.note=k.name;
-  el.innerText=k.name.replace(/\d/,'');
-  piano.appendChild(el);
-  if(k.color==='black'){
-    // position on top of previous white
-    const prevWhiteCount = keys.slice(0,i).filter(n=>n.color==='white').length;
-    el.style.left = (prevWhiteCount*61)+'px';
-  }
-});
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+const ctx = new AudioCtx();
 
-function play(note){
-  const osc=audioCtx.createOscillator();
-  const gain=audioCtx.createGain();
-  osc.type='sine';
-  osc.frequency.value=note.freq;
+function createOscillator(freq) {
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = 'sine';
+  osc.frequency.value = freq;
   osc.connect(gain);
-  gain.connect(audioCtx.destination);
-
-  const now=audioCtx.currentTime;
-  const attack=0.02;
-  const decay=0.3;
-  const sustain=0.2;
-  const release=0.4;
-  gain.gain.setValueAtTime(0,now);
-  gain.gain.linearRampToValueAtTime(0.8,now+attack);
-  gain.gain.exponentialRampToValueAtTime(sustain,now+attack+decay);
-  gain.gain.exponentialRampToValueAtTime(0.001,now+attack+decay+release);
-
-  osc.start(now);
-  osc.stop(now+attack+decay+release+0.1);
+  gain.connect(ctx.destination);
+  gain.gain.setValueAtTime(0, ctx.currentTime);
+  return {osc, gain};
 }
 
-function keyDown(name){
-  const el=document.querySelector(`[data-note="${name}"]`);
-  if(!el) return;
-  el.classList.add('active');
-  const note=keys.find(k=>k.name===name);
-  play(note);
-}
-function keyUp(name){
-  const el=document.querySelector(`[data-note="${name}"]`);
-  if(el) el.classList.remove('active');
+const notesMap = new Map();
+
+function playNote(note) {
+  if(notesMap.has(note.note)) return;
+  const {osc, gain} = createOscillator(note.freq);
+  osc.start();
+  gain.gain.linearRampToValueAtTime(0.6, ctx.currentTime + 0.02);
+  gain.gain.exponentialRampToValueAtTime(0.3, ctx.currentTime + 0.2);
+  notesMap.set(note.note, {osc, gain});
+  activeKeys.add(note.note);
 }
 
-piano.addEventListener('mousedown',e=>{
-  if(e.target.dataset.note) keyDown(e.target.dataset.note);
+function stopNote(note) {
+  if(!notesMap.has(note.note)) return;
+  const {osc, gain} = notesMap.get(note.note);
+  if(!sustain){
+    gain.gain.cancelScheduledValues(ctx.currentTime);
+    gain.gain.setValueAtTime(gain.gain.value, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+    setTimeout(()=>osc.stop(), 500);
+    notesMap.delete(note.note);
+    activeKeys.delete(note.note);
+  }
+}
+
+document.addEventListener('keydown', e=>{
+  if(e.code==="Space"){ sustain=true; }
 });
-piano.addEventListener('mouseup',e=>{
-  if(e.target.dataset.note) keyUp(e.target.dataset.note);
-});
-piano.addEventListener('mouseleave',e=>{
-  document.querySelectorAll('.active').forEach(k=>k.classList.remove('active'));
+document.addEventListener('keyup', e=>{
+  if(e.code==="Space"){ sustain=false; activeKeys.forEach(k=>stopNote({note:k})); }
 });
 
-window.addEventListener('keydown',e=>{
-  const note=keys.find(k=>k.key===e.key.toLowerCase());
-  if(note) keyDown(note.name);
+keys.forEach(k=>{
+  const el = document.createElement('div');
+  el.className = k.note.includes('#')?"key black":"key white";
+  el.innerHTML = k.note;
+  piano.appendChild(el);
+  el.addEventListener('mousedown', ()=>{ 
+    playNote(k); 
+    el.classList.add('active'); 
+  });
+  el.addEventListener('mouseup', ()=>{ 
+    stopNote(k); el.classList.remove('active'); 
+  });
+  el.addEventListener('mouseleave', ()=>{ 
+    stopNote(k); el.classList.remove('active'); 
+  });
 });
-window.addEventListener('keyup',e=>{
-  const note=keys.find(k=>k.key===e.key.toLowerCase());
-  if(note) keyUp(note.name);
-});
+
+// Animated blue balls falling (fewer, bigger)
+const canvas = document.getElementById('bg');
+const c = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+let balls = [];
+for(let i=0;i<15;i++){
+  balls.push({
+    x:Math.random()*canvas.width,
+    y:Math.random()*canvas.height,
+    r:Math.random()*50+30,
+    dy:Math.random()*0.5+0.2,
+    color:`rgba(0, ${Math.floor(Math.random()*255)}, 255,0.4)`
+  });
+}
+
+function animate(){
+  c.clearRect(0,0,canvas.width,canvas.height);
+  balls.forEach(b=>{
+    b.y += b.dy;
+    if(b.y>canvas.height) b.y=0;
+    c.beginPath();
+    c.arc(b.x,b.y,b.r,0,Math.PI*2);
+    c.fillStyle = b.color;
+    c.fill();
+  });
+  requestAnimationFrame(animate);
+}
+animate();
 </script>
 </body>
 </html>
+
+
