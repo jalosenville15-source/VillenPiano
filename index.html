@@ -1,244 +1,206 @@
 <!DOCTYPE html>
 <html lang="fi">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Villen Piano</title>
 <style>
-  body {
-    margin: 0;
-    font-family: sans-serif;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    min-height: 100vh;
-    overflow-x: auto;
-    background: #001f3f;
-    position: relative;
+  :root{
+    --blue1:#001f3f;
+    --blue2:#003366;
+    --blue3:#004080;
+    --lightblue:#00ffff;
   }
-
-  header {
-    font-size: 3rem;
-    margin: 1rem 0;
-    font-weight: bold;
-    color: #00ffff;
-    text-shadow: 0 0 15px #00ffff;
-    z-index: 10;
-    position: relative;
+  body{
+    margin:0;
+    height:100vh;
+    font-family:'Segoe UI',sans-serif;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:flex-start;
+    background:linear-gradient(270deg,var(--blue1),var(--blue2),var(--blue3));
+    background-size:600% 600%;
+    animation:bgshift 18s ease infinite;
+    overflow:hidden;
   }
-
-  /* Valuva tausta */
-  .background {
-    position: fixed;
-    inset: 0;
-    z-index: 0;
-    background: linear-gradient(270deg, #001f3f, #003366, #004080, #001f3f);
-    background-size: 800% 800%;
-    animation: gradientMove 15s ease infinite;
-  }
-
-  @keyframes gradientMove {
+  @keyframes bgshift {
     0%{background-position:0% 50%}
     50%{background-position:100% 50%}
     100%{background-position:0% 50%}
   }
-
-  .piano {
-    display: flex;
-    position: relative;
-    margin: 1rem 0;
-    z-index: 1;
+  h1{
+    color:var(--lightblue);
+    text-shadow:0 0 20px rgba(0,255,255,0.4);
+    font-size:3rem;
+    margin-top:20px;
+    margin-bottom:30px;
   }
-
-  .white-key, .black-key {
-    border: 1px solid #555;
-    border-radius: 0 0 5px 5px;
-    cursor: pointer;
-    position: relative;
-    user-select: none;
+  .piano{
+    position:relative;
+    display:flex;
+    justify-content:center;
+    align-items:flex-end;
+    padding:20px;
+    user-select:none;
   }
-
-  .white-key {
-    width: 40px;
-    height: 200px;
-    background: white;
-    margin: 0 1px;
-    z-index: 1;
+  .white{
+    width:60px;
+    height:240px;
+    margin:1px;
+    background:linear-gradient(to bottom,#fff,#e0e0e0);
+    border:1px solid #999;
+    border-radius:0 0 6px 6px;
+    display:flex;
+    flex-direction:column;
+    justify-content:flex-end;
+    align-items:center;
+    font-weight:bold;
+    color:#222;
+    box-shadow:0 4px 10px rgba(0,0,0,0.4);
+    transition:all 0.08s ease;
   }
-
-  .black-key {
-    width: 28px;
-    height: 120px;
-    background: black;
-    position: absolute;
-    z-index: 2;
-    margin-left: -14px;
+  .white.active{
+    background:linear-gradient(to bottom,#aef,#68f);
+    transform:translateY(3px);
+    box-shadow:0 0 18px rgba(0,255,255,0.6);
   }
-
-  .key-active {
-    transform: scale(0.95);
-    box-shadow: 0 0 15px cyan;
+  .black{
+    position:absolute;
+    width:40px;
+    height:150px;
+    background:linear-gradient(to bottom,#222,#000);
+    border-radius:0 0 6px 6px;
+    z-index:2;
+    margin-left:-20px;
+    color:#fff;
+    display:flex;
+    justify-content:center;
+    align-items:flex-end;
+    padding-bottom:6px;
+    font-weight:bold;
+    transition:all 0.08s ease;
   }
-
-  .controls {
-    margin: 1rem 0;
-    display: flex;
-    gap: 1rem;
-    z-index: 1;
-    position: relative;
+  .black.active{
+    background:linear-gradient(to bottom,#00f,#004);
+    box-shadow:0 0 16px rgba(0,255,255,0.8);
+    transform:translateY(3px);
   }
-
-  button {
-    padding: 0.5rem 1rem;
-    font-size: 1rem;
-    font-weight: bold;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
+  footer{
+    margin-top:40px;
+    color:rgba(255,255,255,0.8);
+    font-size:14px;
   }
-
-  button:active {
-    transform: scale(0.95);
-  }
-
-  .sustain, .mute {
-    background: #00cccc;
-    color: black;
-    text-shadow: none;
-  }
-
 </style>
 </head>
 <body>
-<div class="background"></div>
-<header>Villen Piano</header>
+<h1>Villen Piano</h1>
 
 <div class="piano" id="piano"></div>
 
-<div class="controls">
-  <button id="sustain" class="sustain">Sustain (SPACE)</button>
-  <button id="mute" class="mute">Ääni päällä</button>
-</div>
+<footer>Soita hiirellä tai näppäimistöllä (Z-M ja Q-P)</footer>
 
 <script>
 const keys = [
-  { key: 'C3', freq: 130.81, color:'white', keyboard:'z' },
-  { key: 'C#3', freq:138.59, color:'black', keyboard:'s' },
-  { key: 'D3', freq:146.83, color:'white', keyboard:'x' },
-  { key: 'D#3', freq:155.56, color:'black', keyboard:'d' },
-  { key: 'E3', freq:164.81, color:'white', keyboard:'c' },
-  { key: 'F3', freq:174.61, color:'white', keyboard:'v' },
-  { key: 'F#3', freq:185, color:'black', keyboard:'g' },
-  { key: 'G3', freq:196, color:'white', keyboard:'b' },
-  { key: 'G#3', freq:207.65, color:'black', keyboard:'h' },
-  { key: 'A3', freq:220, color:'white', keyboard:'n' },
-  { key: 'A#3', freq:233.08, color:'black', keyboard:'j' },
-  { key: 'B3', freq:246.94, color:'white', keyboard:'m' },
-  { key: 'C4', freq:261.63, color:'white', keyboard:'q' },
-  { key: 'C#4', freq:277.18, color:'black', keyboard:'2' },
-  { key: 'D4', freq:293.66, color:'white', keyboard:'w' },
-  { key: 'D#4', freq:311.13, color:'black', keyboard:'3' },
-  { key: 'E4', freq:329.63, color:'white', keyboard:'e' },
-  { key: 'F4', freq:349.23, color:'white', keyboard:'r' },
-  { key: 'F#4', freq:369.99, color:'black', keyboard:'5' },
-  { key: 'G4', freq:392, color:'white', keyboard:'t' },
-  { key: 'G#4', freq:415.3, color:'black', keyboard:'6' },
-  { key: 'A4', freq:440, color:'white', keyboard:'y' },
-  { key: 'A#4', freq:466.16, color:'black', keyboard:'7' },
-  { key: 'B4', freq:493.88, color:'white', keyboard:'u' },
-  { key: 'C5', freq:523.25, color:'white', keyboard:'i' },
-  { key: 'C#5', freq:554.37, color:'black', keyboard:'9' },
-  { key: 'D5', freq:587.33, color:'white', keyboard:'o' },
-  { key: 'D#5', freq:622.25, color:'black', keyboard:'0' },
-  { key: 'E5', freq:659.25, color:'white', keyboard:'p' },
-  { key: 'F5', freq:698.46, color:'white', keyboard:'å' }
+  {name:'C3',freq:130.81,color:'white',key:'z'},
+  {name:'C#3',freq:138.59,color:'black',key:'s'},
+  {name:'D3',freq:146.83,color:'white',key:'x'},
+  {name:'D#3',freq:155.56,color:'black',key:'d'},
+  {name:'E3',freq:164.81,color:'white',key:'c'},
+  {name:'F3',freq:174.61,color:'white',key:'v'},
+  {name:'F#3',freq:185.00,color:'black',key:'g'},
+  {name:'G3',freq:196.00,color:'white',key:'b'},
+  {name:'G#3',freq:207.65,color:'black',key:'h'},
+  {name:'A3',freq:220.00,color:'white',key:'n'},
+  {name:'A#3',freq:233.08,color:'black',key:'j'},
+  {name:'B3',freq:246.94,color:'white',key:'m'},
+
+  {name:'C4',freq:261.63,color:'white',key:'q'},
+  {name:'C#4',freq:277.18,color:'black',key:'2'},
+  {name:'D4',freq:293.66,color:'white',key:'w'},
+  {name:'D#4',freq:311.13,color:'black',key:'3'},
+  {name:'E4',freq:329.63,color:'white',key:'e'},
+  {name:'F4',freq:349.23,color:'white',key:'r'},
+  {name:'F#4',freq:369.99,color:'black',key:'5'},
+  {name:'G4',freq:392.00,color:'white',key:'t'},
+  {name:'G#4',freq:415.30,color:'black',key:'6'},
+  {name:'A4',freq:440.00,color:'white',key:'y'},
+  {name:'A#4',freq:466.16,color:'black',key:'7'},
+  {name:'B4',freq:493.88,color:'white',key:'u'},
+  {name:'C5',freq:523.25,color:'white',key:'i'},
+  {name:'C#5',freq:554.37,color:'black',key:'9'},
+  {name:'D5',freq:587.33,color:'white',key:'o'},
+  {name:'D#5',freq:622.25,color:'black',key:'0'},
+  {name:'E5',freq:659.25,color:'white',key:'p'}
 ];
 
-const pianoDiv = document.getElementById('piano');
+const piano = document.getElementById('piano');
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-const activeOsc = new Map();
-let sustain = false;
-let muted = false;
 
-// Render keys
-keys.forEach((k,i) => {
-  const btn = document.createElement('div');
-  btn.classList.add(k.color === 'white' ? 'white-key' : 'black-key');
-  btn.dataset.key = k.key;
-
-  // black key positions
-  if(k.color==='black') {
-    const left = Array.from(pianoDiv.children).filter(x=>x.classList.contains('white-key')).length;
-    btn.style.left = `${left*41-14}px`;
+keys.forEach((k,i)=>{
+  const el=document.createElement('div');
+  el.classList.add(k.color);
+  el.dataset.note=k.name;
+  el.innerText=k.name.replace(/\d/,'');
+  piano.appendChild(el);
+  if(k.color==='black'){
+    // position on top of previous white
+    const prevWhiteCount = keys.slice(0,i).filter(n=>n.color==='white').length;
+    el.style.left = (prevWhiteCount*61)+'px';
   }
-
-  pianoDiv.appendChild(btn);
-
-  btn.addEventListener('mousedown', () => pressKey(k));
-  btn.addEventListener('mouseup', () => releaseKey(k));
-  btn.addEventListener('mouseleave', () => releaseKey(k));
 });
 
-function playSound(freq) {
-  if (muted) return;
-  const osc = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
-  osc.type = 'sine';
-  osc.frequency.value = freq;
-  gain.gain.setValueAtTime(0, audioCtx.currentTime);
-  gain.gain.linearRampToValueAtTime(0.6, audioCtx.currentTime+0.01);
-  gain.gain.exponentialRampToValueAtTime(0.3, audioCtx.currentTime+0.15);
+function play(note){
+  const osc=audioCtx.createOscillator();
+  const gain=audioCtx.createGain();
+  osc.type='sine';
+  osc.frequency.value=note.freq;
   osc.connect(gain);
   gain.connect(audioCtx.destination);
-  osc.start();
-  return {osc, gain};
+
+  const now=audioCtx.currentTime;
+  const attack=0.02;
+  const decay=0.3;
+  const sustain=0.2;
+  const release=0.4;
+  gain.gain.setValueAtTime(0,now);
+  gain.gain.linearRampToValueAtTime(0.8,now+attack);
+  gain.gain.exponentialRampToValueAtTime(sustain,now+attack+decay);
+  gain.gain.exponentialRampToValueAtTime(0.001,now+attack+decay+release);
+
+  osc.start(now);
+  osc.stop(now+attack+decay+release+0.1);
 }
 
-function pressKey(k) {
-  if (!activeOsc.has(k.key)) {
-    const sound = playSound(k.freq);
-    activeOsc.set(k.key, sound);
-    const btn = pianoDiv.querySelector(`[data-key='${k.key}']`);
-    btn?.classList.add('key-active');
-  }
+function keyDown(name){
+  const el=document.querySelector(`[data-note="${name}"]`);
+  if(!el) return;
+  el.classList.add('active');
+  const note=keys.find(k=>k.name===name);
+  play(note);
+}
+function keyUp(name){
+  const el=document.querySelector(`[data-note="${name}"]`);
+  if(el) el.classList.remove('active');
 }
 
-function releaseKey(k) {
-  if (!sustain && activeOsc.has(k.key)) {
-    const {osc, gain} = activeOsc.get(k.key);
-    const now = audioCtx.currentTime;
-    gain.gain.cancelScheduledValues(now);
-    gain.gain.setValueAtTime(gain.gain.value, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now+0.2);
-    setTimeout(()=>{try{osc.stop()}catch(e){}}, 200);
-    activeOsc.delete(k.key);
-    const btn = pianoDiv.querySelector(`[data-key='${k.key}']`);
-    btn?.classList.remove('key-active');
-  }
-}
-
-// Keyboard events
-const pressedKeys = new Set();
-window.addEventListener('keydown', e => {
-  if(e.code==='Space'){ sustain=true; return; }
-  if(pressedKeys.has(e.key)) return;
-  pressedKeys.add(e.key);
-  const k = keys.find(k=>k.keyboard===e.key.toLowerCase());
-  if(k) pressKey(k);
+piano.addEventListener('mousedown',e=>{
+  if(e.target.dataset.note) keyDown(e.target.dataset.note);
 });
-window.addEventListener('keyup', e => {
-  if(e.code==='Space'){ sustain=false; activeOsc.forEach((_,k)=>releaseKey(keys.find(x=>x.key===k))); return; }
-  pressedKeys.delete(e.key);
-  const k = keys.find(k=>k.keyboard===e.key.toLowerCase());
-  if(k) releaseKey(k);
+piano.addEventListener('mouseup',e=>{
+  if(e.target.dataset.note) keyUp(e.target.dataset.note);
+});
+piano.addEventListener('mouseleave',e=>{
+  document.querySelectorAll('.active').forEach(k=>k.classList.remove('active'));
 });
 
-// Controls
-document.getElementById('sustain').addEventListener('click', ()=>sustain=!sustain);
-document.getElementById('mute').addEventListener('click', ()=>{
-  muted = !muted;
-  document.getElementById('mute').textContent = muted?'Ääni pois':'Ääni päällä';
-  if(muted) activeOsc.forEach((_,k)=>releaseKey(keys.find(x=>x.key===k)));
+window.addEventListener('keydown',e=>{
+  const note=keys.find(k=>k.key===e.key.toLowerCase());
+  if(note) keyDown(note.name);
+});
+window.addEventListener('keyup',e=>{
+  const note=keys.find(k=>k.key===e.key.toLowerCase());
+  if(note) keyUp(note.name);
 });
 </script>
 </body>
